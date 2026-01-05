@@ -1,6 +1,6 @@
 pub mod commands;
 mod config;
-mod error;
+pub mod error;
 mod image;
 mod monitor;
 mod system;

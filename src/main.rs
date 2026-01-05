@@ -1,7 +1,7 @@
 use clap::Parser;
-use wallgdm::commands::Cli;
+use wallgdm::{commands::Cli, error::Result};
 
-fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
     cli.run()?;
 

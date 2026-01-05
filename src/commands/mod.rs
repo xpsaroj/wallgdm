@@ -1,3 +1,4 @@
+use crate::error::Result;
 use clap::{Parser, Subcommand};
 
 pub mod list;
@@ -27,7 +28,7 @@ pub enum Commands {
 
 impl Cli {
     /// Execute the selected command
-    pub fn run(self) -> anyhow::Result<()> {
+    pub fn run(self) -> Result<()> {
         match self.command {
             Commands::Set(args) => set::run(args),
             Commands::Revert => revert::run(),

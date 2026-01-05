@@ -1,3 +1,4 @@
+use crate::error::Result;
 use clap::Args;
 
 /// Arguments for the 'set' command
@@ -21,7 +22,7 @@ pub struct SetArgs {
     pub blur: u32,
 }
 
-pub fn run(args: SetArgs) -> Result<(), anyhow::Error> {
+pub fn run(args: SetArgs) -> Result<()> {
     println!(
         "Setting wallpaper to '{}' with blur {}",
         args.image, args.blur
