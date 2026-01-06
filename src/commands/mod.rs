@@ -9,8 +9,11 @@ pub mod status;
 /// Command line interface structure
 #[derive(Parser, Debug)]
 #[command(
+    name = "wallgdm",
     version,
-    long_about = None
+    about = "A wallpaper manager for GNOME login screen with multi-monitor support",
+    long_about = None,
+    arg_required_else_help = true,
 )]
 pub struct Cli {
     #[command(subcommand)]

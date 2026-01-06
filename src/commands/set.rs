@@ -1,5 +1,7 @@
-use crate::error::Result;
 use clap::Args;
+
+use crate::error::{Result, SetError};
+use crate::monitor::get_monitor_layout;
 
 /// Arguments for the 'set' command
 #[derive(Args, Debug)]
@@ -26,6 +28,14 @@ pub fn run(args: SetArgs) -> Result<()> {
     println!(
         "Setting wallpaper to '{}' with blur {}",
         args.image, args.blur
+    );
+
+    let monitor_layout =
+        get_monitor_layout().map_err(SetError::from)?;
+
+    println!(
+        "Detected monitor layout: {:#?}",
+        monitor_layout
     );
     Ok(())
 }
