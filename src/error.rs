@@ -36,9 +36,9 @@ pub enum WallGdmError {
 /// Errors that can occur while setting a new GDM wallpaper.
 #[derive(Error, Debug)]
 pub enum SetError {
-    /// The provided image path is invalid or is not readable.
-    #[error("invalid image path")]
-    InvalidImagePath,
+    /// The provided image path could not be processed.
+    #[error("image processing error")]
+    Image(#[from] ImageError),
 
     /// Failed to detect the system monitor layout.
     #[error("monitor error")]
@@ -51,10 +51,6 @@ pub enum SetError {
     /// Failed to extract or modify the GNOME Shell theme.
     #[error("failed to extract gnome shell theme")]
     ThemeExtractionFailed,
-
-    /// The provided image format is not supported.
-    #[error("unsupported image format")]
-    UnsupportedImageFormat,
 }
 
 /// Errors that can occur while reverting to the previous GDM wallpaper.
@@ -119,4 +115,24 @@ pub enum SystemError {
     /// A required system command failed to execute.
     #[error("system command failed: {0}")]
     CommandFailed(String),
+}
+
+/// Errors related to image processing.
+#[derive(Error, Debug)]
+pub enum ImageError {
+    /// The provided image path is invalid or unreadable.
+    #[error("invalid image path")]
+    InvalidImagePath,
+
+    /// The image format is not supported.
+    #[error("unsupported image format")]
+    UnsupportedImageFormat,
+
+    /// Failed to load the image from the specified path.
+    #[error("failed to load image")]
+    ImageLoadFailed,
+
+    /// Failed to save the processed image.
+    #[error("failed to save image")]
+    ImageSaveFailed,
 }

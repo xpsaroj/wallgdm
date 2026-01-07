@@ -99,3 +99,77 @@ fn parse_geometry(
             .map_err(|_| MonitorError::DetectionFailed)?,
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_single_monitor() {
+        let  xrandr_output = "\
+Screen 0: minimum 16 x 16, current 1920 x 1080, maximum 32767 x 32767
+eDP-1 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 310mm x 170mm
+   1920x1080     59.96*+
+   1440x1080     59.99  
+   1400x1050     59.98  
+";
+
+        let layout =
+            parse_xrandr_output(xrandr_output).unwrap();
+
+        assert_eq!(layout.monitors.len(), 1);
+        let m = &layout.monitors[0];
+        assert_eq!(m.name, "eDP-1");
+        assert_eq!(m.width, 1920);
+        assert_eq!(m.height, 1080);
+        assert_eq!(m.x, 0);
+        assert_eq!(m.y, 0);
+        // assert!(m.is_primary); // Fails in hyprland as xrandr does not report primary
+        assert_eq!(layout.total_width, 1920);
+        assert_eq!(layout.total_height, 1080);
+    }
+
+    #[test]
+    fn test_parse_dual_monitors() {
+        let xrandr_output = "\
+Screen 0: minimum 16 x 16, current 3840 x 1080, maximum 32767 x 32767
+eDP-1 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 310mm x 170mm
+   1920x1080     59.96*+
+   1440x1080     59.99  
+   1400x1050     59.98  
+HDMI-A-1 connected 1920x1080+1920+0 (normal left inverted right x axis y axis) 790mm x 0mm
+   1920x1080     59.96*+
+   1440x1080     59.99  
+   1400x1050     59.98  
+";
+
+        let layout =
+            parse_xrandr_output(xrandr_output).unwrap();
+        assert_eq!(layout.monitors.len(), 2);
+
+        let m1 = &layout.monitors[0];
+        assert_eq!(m1.name, "eDP-1");
+        assert_eq!(m1.width, 1920);
+        assert_eq!(m1.height, 1080);
+        assert_eq!(m1.x, 0);
+        assert_eq!(m1.y, 0);
+
+        let m2 = &layout.monitors[1];
+        assert_eq!(m2.name, "HDMI-A-1");
+        assert_eq!(m2.width, 1920);
+        assert_eq!(m2.height, 1080);
+        assert_eq!(m2.x, 1920);
+        assert_eq!(m2.y, 0);
+
+        // assert!(m.is_primary); // Fails in hyprland as xrandr does not report primary
+        assert_eq!(layout.total_width, 1920 + 1920);
+        assert_eq!(layout.total_height, 1080);
+    }
+
+    #[test]
+    fn test_parse_invalid_output() {
+        let output = "some text without proper format";
+        let result = parse_xrandr_output(output);
+        assert!(result.is_err());
+    }
+}

@@ -1,6 +1,7 @@
 use clap::Args;
 
 use crate::error::{Result, SetError};
+use crate::image::compose_and_save_wallpaper;
 use crate::monitor::get_monitor_layout;
 
 /// Arguments for the 'set' command
@@ -26,7 +27,7 @@ pub struct SetArgs {
 
 pub fn run(args: SetArgs) -> Result<()> {
     println!(
-        "Setting wallpaper to '{}' with blur {}",
+        "\nSetting wallpaper to '{}' with blur {}\n",
         args.image, args.blur
     );
 
@@ -34,8 +35,21 @@ pub fn run(args: SetArgs) -> Result<()> {
         get_monitor_layout().map_err(SetError::from)?;
 
     println!(
-        "Detected monitor layout: {:#?}",
+        "Detected monitor layout: {:#?}\n",
         monitor_layout
     );
+
+    let wallpaper_path = compose_and_save_wallpaper(
+        &args.image,
+        &monitor_layout,
+        args.blur as f32,
+    )
+    .map_err(SetError::from)?;
+
+    println!(
+        "Wallpaper composed and saved to '{}'\n",
+        wallpaper_path
+    );
+
     Ok(())
 }
