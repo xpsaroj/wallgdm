@@ -3,9 +3,7 @@ use std::{fs, path::Path, process::Command};
 use crate::config::GNOME_SHELL_THEME_RESOURCE;
 use crate::error::ThemeError;
 
-pub fn extract_gnome_shell_theme(
-    workdir: &Path,
-) -> Result<(), ThemeError> {
+pub fn extract_gnome_shell_theme(workdir: &Path) -> Result<(), ThemeError> {
     let resource_list = list_resources()?;
 
     for resource in resource_list {
@@ -27,8 +25,7 @@ fn list_resources() -> Result<Vec<String>, ThemeError> {
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let resources =
-        stdout.lines().map(|s| s.to_string()).collect();
+    let resources = stdout.lines().map(|s| s.to_string()).collect();
 
     Ok(resources)
 }
@@ -44,9 +41,8 @@ fn extract_single_resource(
     let final_output_path = output_path.join(relative_path);
 
     if let Some(parent) = final_output_path.parent() {
-        fs::create_dir_all(parent).map_err(|_| {
-            ThemeError::ThemeExtractionFailed
-        })?;
+        fs::create_dir_all(parent)
+            .map_err(|_| ThemeError::ThemeExtractionFailed)?;
     }
 
     let output = Command::new("gresource")
@@ -64,4 +60,35 @@ fn extract_single_resource(
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_extract_gnome_shell_theme() {
+        let tmp_dir = tempdir().expect("failed to create temp dir");
+
+        let result = extract_gnome_shell_theme(tmp_dir.path());
+        assert!(result.is_ok());
+
+        // Check if some expected files are extracted
+        let expected_files = vec![
+            "theme/gnome-shell-dark.css",
+            "theme/gnome-shell-light.css",
+            "theme/gnome-shell-start.svg",
+            "theme/gnome-shell-high-contrast.css",
+        ];
+
+        for file in expected_files {
+            let file_path = tmp_dir.path().join(file);
+            assert!(
+                file_path.exists(),
+                "expected extracted file {:?} to exist",
+                file_path
+            );
+        }
+    }
 }

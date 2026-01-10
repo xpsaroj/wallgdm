@@ -19,7 +19,6 @@ pub struct MonitorLayout {
     pub total_height: u32,
 }
 
-pub fn get_monitor_layout()
--> Result<MonitorLayout, MonitorError> {
+pub fn get_monitor_layout() -> Result<MonitorLayout, MonitorError> {
     detect::detect_monitors()
 }

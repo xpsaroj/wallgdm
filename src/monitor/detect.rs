@@ -3,8 +3,7 @@ use std::process::Command;
 use crate::error::MonitorError;
 use crate::monitor::{Monitor, MonitorLayout};
 
-pub fn detect_monitors()
--> Result<MonitorLayout, MonitorError> {
+pub fn detect_monitors() -> Result<MonitorLayout, MonitorError> {
     let output = Command::new("xrandr")
         .arg("--query")
         .output()
@@ -18,9 +17,7 @@ pub fn detect_monitors()
     parse_xrandr_output(&stdout)
 }
 
-fn parse_xrandr_output(
-    output: &str,
-) -> Result<MonitorLayout, MonitorError> {
+fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
     let mut monitors = Vec::new();
 
     for line in output.lines() {
@@ -30,13 +27,11 @@ fn parse_xrandr_output(
 
         let is_primary = line.contains(" primary ");
 
-        let parts: Vec<&str> =
-            line.split_whitespace().collect();
+        let parts: Vec<&str> = line.split_whitespace().collect();
         let name = parts[0].to_string();
 
-        let geometry = parts
-            .iter()
-            .find(|p| p.contains('x') && p.contains('+'));
+        let geometry =
+            parts.iter().find(|p| p.contains('x') && p.contains('+'));
 
         if let Some(g) = geometry {
             let (width, height, x, y) = parse_geometry(g)?;
@@ -75,28 +70,16 @@ fn parse_xrandr_output(
     })
 }
 
-fn parse_geometry(
-    g: &str,
-) -> Result<(u32, u32, i32, i32), MonitorError> {
-    let (res, pos) = g
-        .split_once('+')
-        .ok_or(MonitorError::DetectionFailed)?;
-    let (w, h) = res
-        .split_once('x')
-        .ok_or(MonitorError::DetectionFailed)?;
-    let (x, y) = pos
-        .split_once('+')
-        .ok_or(MonitorError::DetectionFailed)?;
+fn parse_geometry(g: &str) -> Result<(u32, u32, i32, i32), MonitorError> {
+    let (res, pos) = g.split_once('+').ok_or(MonitorError::DetectionFailed)?;
+    let (w, h) = res.split_once('x').ok_or(MonitorError::DetectionFailed)?;
+    let (x, y) = pos.split_once('+').ok_or(MonitorError::DetectionFailed)?;
 
     Ok((
-        w.parse()
-            .map_err(|_| MonitorError::DetectionFailed)?,
-        h.parse()
-            .map_err(|_| MonitorError::DetectionFailed)?,
-        x.parse()
-            .map_err(|_| MonitorError::DetectionFailed)?,
-        y.parse()
-            .map_err(|_| MonitorError::DetectionFailed)?,
+        w.parse().map_err(|_| MonitorError::DetectionFailed)?,
+        h.parse().map_err(|_| MonitorError::DetectionFailed)?,
+        x.parse().map_err(|_| MonitorError::DetectionFailed)?,
+        y.parse().map_err(|_| MonitorError::DetectionFailed)?,
     ))
 }
 
@@ -114,8 +97,7 @@ eDP-1 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 310mm x
    1400x1050     59.98  
 ";
 
-        let layout =
-            parse_xrandr_output(xrandr_output).unwrap();
+        let layout = parse_xrandr_output(xrandr_output).unwrap();
 
         assert_eq!(layout.monitors.len(), 1);
         let m = &layout.monitors[0];
@@ -143,8 +125,7 @@ HDMI-A-1 connected 1920x1080+1920+0 (normal left inverted right x axis y axis) 7
    1400x1050     59.98  
 ";
 
-        let layout =
-            parse_xrandr_output(xrandr_output).unwrap();
+        let layout = parse_xrandr_output(xrandr_output).unwrap();
         assert_eq!(layout.monitors.len(), 2);
 
         let m1 = &layout.monitors[0];

@@ -7,16 +7,15 @@ use crate::{
 };
 use std::fs;
 
-pub fn extract_and_modify_theme() -> Result<(), ThemeError>
-{
-    let workdir = theme_workdir()
-        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
+    let workdir =
+        theme_workdir().map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
     extract::extract_gnome_shell_theme(&workdir)?;
 
     // copy image to the theme directory
-    let theme_image_path = wallpaper_file_path()
-        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+    let theme_image_path =
+        wallpaper_file_path().map_err(|_| ThemeError::ThemeExtractionFailed)?;
     let theme_dir = workdir.join("theme");
     let dest_image_path = theme_dir.join("background.png");
 
