@@ -40,17 +40,12 @@ pub fn run(args: SetArgs) -> Result<()> {
         monitor_layout
     );
 
-    let wallpaper_path = compose_and_save_wallpaper(
+    compose_and_save_wallpaper(
         &args.image,
         &monitor_layout,
         args.blur as f32,
     )
     .map_err(SetError::from)?;
-
-    println!(
-        "Wallpaper composed and saved to '{}'\n",
-        wallpaper_path
-    );
 
     extract_and_modify_theme().map_err(SetError::from)?;
 

@@ -5,6 +5,7 @@
 //! - Command-specific errors (`SetError`, `RevertError`, etc.) describe user intent failures
 //! - Module errors (`MonitorError`, `SystemError`) describe low-level system failures
 
+use std::path::PathBuf;
 use thiserror::Error;
 
 /// Result type used across the project.
@@ -140,6 +141,18 @@ pub enum ImageError {
 /// Errors related to theme extraction and modification.
 #[derive(Error, Debug)]
 pub enum ThemeError {
+    /// Failed to generate gresource XML.
+    #[error("failed to generate gresource XML")]
+    GresourceXmlGenerationFailed,
+
+    /// Failed to extract the Gnome shell theme.
     #[error("failed to extract gnome shell theme")]
     ThemeExtractionFailed,
+}
+
+/// Error type for config / directory operations
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("failed to create directory {0}")]
+    CreateDirFailed(PathBuf),
 }

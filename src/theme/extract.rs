@@ -1,5 +1,6 @@
-use std::{path::Path, process::Command};
+use std::{fs, path::Path, process::Command};
 
+use crate::config::GNOME_SHELL_THEME_RESOURCE;
 use crate::error::ThemeError;
 
 pub fn extract_gnome_shell_theme(
@@ -15,11 +16,9 @@ pub fn extract_gnome_shell_theme(
 }
 
 fn list_resources() -> Result<Vec<String>, ThemeError> {
-    const GNOME_THEME_RESOURCE: &str = "/usr/share/gnome-shell/gnome-shell-theme.gresource";
-
     let output = Command::new("gresource")
         .arg("list")
-        .arg(GNOME_THEME_RESOURCE)
+        .arg(GNOME_SHELL_THEME_RESOURCE)
         .output()
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
@@ -38,8 +37,6 @@ fn extract_single_resource(
     resource: &str,
     output_path: &Path,
 ) -> Result<(), ThemeError> {
-    let GNOME_THEME_RESOURCE: &str = "/usr/share/gnome-shell/gnome-shell-theme.gresource";
-
     let relative_path = resource
         .strip_prefix("/org/gnome/shell/")
         .ok_or(ThemeError::ThemeExtractionFailed)?;
@@ -47,14 +44,14 @@ fn extract_single_resource(
     let final_output_path = output_path.join(relative_path);
 
     if let Some(parent) = final_output_path.parent() {
-        std::fs::create_dir_all(parent).map_err(|_| {
+        fs::create_dir_all(parent).map_err(|_| {
             ThemeError::ThemeExtractionFailed
         })?;
     }
 
     let output = Command::new("gresource")
         .arg("extract")
-        .arg(GNOME_THEME_RESOURCE)
+        .arg(GNOME_SHELL_THEME_RESOURCE)
         .arg(resource)
         .output()
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
@@ -63,7 +60,7 @@ fn extract_single_resource(
         return Err(ThemeError::ThemeExtractionFailed);
     }
 
-    std::fs::write(&final_output_path, &output.stdout)
+    fs::write(&final_output_path, &output.stdout)
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
     Ok(())

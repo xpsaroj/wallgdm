@@ -1,15 +1,29 @@
 mod extract;
+mod xml;
 
-use crate::error::ThemeError;
-use std::path::Path;
+use crate::{
+    config::{theme_workdir, wallpaper_file_path},
+    error::ThemeError,
+};
+use std::fs;
 
-pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
-    let workdir = Path::new("/tmp/wallgdm_theme_workdir");
+pub fn extract_and_modify_theme() -> Result<(), ThemeError>
+{
+    let workdir = theme_workdir()
+        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
-    // Step 1: Extract the GNOME Shell theme resources
-    extract::extract_gnome_shell_theme(workdir)?;
+    extract::extract_gnome_shell_theme(&workdir)?;
 
-    // Additional steps for modification can be added here
+    // copy image to the theme directory
+    let theme_image_path = wallpaper_file_path()
+        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+    let theme_dir = workdir.join("theme");
+    let dest_image_path = theme_dir.join("background.png");
+
+    fs::copy(&theme_image_path, &dest_image_path)
+        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+
+    xml::generate_gresource_xml(&workdir)?;
 
     Ok(())
 }
