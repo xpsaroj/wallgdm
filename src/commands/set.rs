@@ -3,6 +3,7 @@ use clap::Args;
 use crate::error::{Result, SetError};
 use crate::image::compose_and_save_wallpaper;
 use crate::monitor::get_monitor_layout;
+use crate::theme::extract_and_modify_theme;
 
 /// Arguments for the 'set' command
 #[derive(Args, Debug)]
@@ -50,6 +51,8 @@ pub fn run(args: SetArgs) -> Result<()> {
         "Wallpaper composed and saved to '{}'\n",
         wallpaper_path
     );
+
+    extract_and_modify_theme().map_err(SetError::from)?;
 
     Ok(())
 }

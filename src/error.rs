@@ -48,9 +48,9 @@ pub enum SetError {
     #[error("system error")]
     System(#[from] SystemError),
 
-    /// Failed to extract or modify the GNOME Shell theme.
-    #[error("failed to extract gnome shell theme")]
-    ThemeExtractionFailed,
+    /// Theme extraction or modification failed.
+    #[error("theme error")]
+    Theme(#[from] ThemeError),
 }
 
 /// Errors that can occur while reverting to the previous GDM wallpaper.
@@ -135,4 +135,11 @@ pub enum ImageError {
     /// Failed to save the processed image.
     #[error("failed to save image")]
     ImageSaveFailed,
+}
+
+/// Errors related to theme extraction and modification.
+#[derive(Error, Debug)]
+pub enum ThemeError {
+    #[error("failed to extract gnome shell theme")]
+    ThemeExtractionFailed,
 }
