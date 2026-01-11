@@ -148,6 +148,10 @@ pub enum ThemeError {
     /// Failed to extract the Gnome shell theme.
     #[error("failed to extract gnome shell theme")]
     ThemeExtractionFailed,
+
+    /// Failed to modify the theme CSS.
+    #[error("failed to modify theme CSS")]
+    CssModificationFailed,
 }
 
 /// Error type for config / directory operations

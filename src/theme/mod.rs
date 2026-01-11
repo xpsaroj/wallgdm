@@ -1,3 +1,4 @@
+mod css;
 mod extract;
 mod xml;
 
@@ -21,6 +22,8 @@ pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
 
     fs::copy(&theme_image_path, &dest_image_path)
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+
+    css::update_theme_css(&workdir)?;
 
     xml::generate_gresource_xml(&workdir)?;
 
