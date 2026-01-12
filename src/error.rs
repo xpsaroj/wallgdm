@@ -108,6 +108,10 @@ pub enum MonitorError {
     /// The system monitor layout could not be detected.
     #[error("failed to detect monitors")]
     DetectionFailed,
+
+    /// The monitor data parsed was invalid or inconsistent.
+    #[error("invalid monitor data")]
+    InvalidData,
 }
 
 /// Errors related to system-level operations.

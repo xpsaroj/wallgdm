@@ -10,9 +10,7 @@ use crate::{
 };
 use std::{fs, process::Command};
 
-pub fn extract_and_modify_theme(
-    monitor_layout: &MonitorLayout,
-) -> Result<(), ThemeError> {
+pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
     let workdir =
         theme_workdir().map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
@@ -27,7 +25,7 @@ pub fn extract_and_modify_theme(
     fs::copy(&theme_image_path, &dest_image_path)
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
-    css::update_theme_css(&workdir, monitor_layout)?;
+    css::update_theme_css(&workdir)?;
 
     let xml_path = xml::generate_gresource_xml(&workdir)?;
 

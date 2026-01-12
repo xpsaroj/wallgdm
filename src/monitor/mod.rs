@@ -1,4 +1,5 @@
 mod detect;
+mod transform;
 
 use crate::error::MonitorError;
 
@@ -19,6 +20,12 @@ pub struct MonitorLayout {
     pub total_height: u32,
 }
 
-pub fn get_monitor_layout() -> Result<MonitorLayout, MonitorError> {
-    detect::detect_monitors()
+pub fn get_monitor_layout(scale: f32) -> Result<MonitorLayout, MonitorError> {
+    let monitor_layout = detect::detect_monitors()?;
+    println!("Raw monitor layout: {:#?}", monitor_layout);
+
+    let monitor_layout = transform::apply_scale(&monitor_layout, scale)?;
+    println!("Scaled monitor layout: {:#?}", monitor_layout);
+
+    Ok(monitor_layout)
 }

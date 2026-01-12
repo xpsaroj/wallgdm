@@ -1,4 +1,4 @@
-use crate::{error::ThemeError, theme::compile};
+use crate::error::ThemeError;
 use std::{
     path::{Path, PathBuf},
     process::Command,
