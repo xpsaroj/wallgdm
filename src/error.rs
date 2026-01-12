@@ -32,6 +32,10 @@ pub enum WallGdmError {
     /// Listing available wallpapers failed.
     #[error("list command failed")]
     List(#[from] ListError),
+
+    /// Installing a new GDM theme failed.
+    #[error("install command failed")]
+    Install,
 }
 
 /// Errors that can occur while setting a new GDM wallpaper.
@@ -152,6 +156,14 @@ pub enum ThemeError {
     /// Failed to modify the theme CSS.
     #[error("failed to modify theme CSS")]
     CssModificationFailed,
+
+    /// Failed to compile the theme resources.
+    #[error("failed to compile theme resources")]
+    ThemeCompilationFailed,
+
+    /// Theme installation failed.
+    #[error("theme installation failed")]
+    ThemeInstallationFailed,
 }
 
 /// Error type for config / directory operations
@@ -159,4 +171,12 @@ pub enum ThemeError {
 pub enum ConfigError {
     #[error("failed to create directory {0}")]
     CreateDirFailed(PathBuf),
+}
+
+/// Errors related to theme installation.
+#[derive(Error, Debug)]
+pub enum ThemeInstallError {
+    /// Failed to install the theme.
+    #[error("theme installation failed")]
+    InstallationFailed,
 }

@@ -1,5 +1,6 @@
 use std::{
     fs,
+    io::ErrorKind,
     path::{Path, PathBuf},
 };
 
@@ -8,6 +9,12 @@ use dirs::data_dir;
 
 /// Directory where temporary theme extraction / modification happens
 pub fn theme_workdir() -> Result<PathBuf, ConfigError> {
+    let path = std::env::temp_dir().join("wallgdm_theme_workdir");
+    match fs::remove_dir_all("/tmp/wallgdm_theme_workdir") {
+        Ok(_) => {}
+        Err(e) if e.kind() == ErrorKind::NotFound => {}
+        Err(_) => return Err(ConfigError::CreateDirFailed(path.to_path_buf())),
+    }
     let path = std::env::temp_dir().join("wallgdm_theme_workdir");
     ensure_exists(&path)?;
     Ok(path)

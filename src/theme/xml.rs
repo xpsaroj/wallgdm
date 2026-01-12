@@ -20,7 +20,7 @@ pub fn generate_gresource_xml(workdir: &Path) -> Result<PathBuf, ThemeError> {
         }
     }
 
-    let xml_path = workdir.join("gnome-shell-theme.gresource.xml");
+    let xml_path = workdir.join("theme/gnome-shell-theme.gresource.xml");
     let mut xml_file = fs::File::create(&xml_path)
         .map_err(|_| ThemeError::GresourceXmlGenerationFailed)?;
 

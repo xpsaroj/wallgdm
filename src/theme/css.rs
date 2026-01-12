@@ -1,25 +1,34 @@
 use std::{fs, path::Path};
 
 use crate::error::ThemeError;
+use crate::monitor::MonitorLayout;
 
-const BACKGROUND_RULE: &str = r#"
-#lockDialogGroup {
-    background: url("background.png");
-    background-size: cover;
-    background-repeat: no-repeat;
-}
-"#;
-
-pub fn update_theme_css(workdir: &Path) -> Result<(), ThemeError> {
+pub fn update_theme_css(
+    workdir: &Path,
+    monitor_layout: &MonitorLayout,
+) -> Result<(), ThemeError> {
     let css_paths =
         ["theme/gnome-shell-dark.css", "theme/gnome-shell-light.css"];
+
+    let new_block = format!(
+        r#"
+#lockDialogGroup {{
+    background: url("background.png");
+    background-size: {}px {}px;
+    background-repeat: no-repeat;
+}}
+"#,
+        monitor_layout.total_width, monitor_layout.total_height,
+    );
+
+    println!("New CSS Block:\n{}", new_block);
 
     let css_paths = css_paths.map(|p| workdir.join(p));
     let mut modified_any = false;
 
     for css_path in css_paths {
         if css_path.exists() {
-            update_single_file(&css_path)?;
+            update_single_file(&css_path, &new_block)?;
             modified_any = true;
         }
     }
@@ -31,12 +40,15 @@ pub fn update_theme_css(workdir: &Path) -> Result<(), ThemeError> {
     Ok(())
 }
 
-fn update_single_file(file_path: &Path) -> Result<(), ThemeError> {
+fn update_single_file(
+    file_path: &Path,
+    new_block: &str,
+) -> Result<(), ThemeError> {
     let css = fs::read_to_string(&file_path)
         .map_err(|_| ThemeError::CssModificationFailed)?;
 
     let updated_css =
-        replace_or_append_block(&css, "#lockDialogGroup", BACKGROUND_RULE);
+        replace_or_append_block(&css, "#lockDialogGroup", &new_block);
 
     fs::write(&file_path, updated_css)
         .map_err(|_| ThemeError::CssModificationFailed)?;

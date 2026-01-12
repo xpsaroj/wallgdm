@@ -1,3 +1,4 @@
+mod compile;
 mod css;
 mod extract;
 mod xml;
@@ -5,10 +6,13 @@ mod xml;
 use crate::{
     config::{theme_workdir, wallpaper_file_path},
     error::ThemeError,
+    monitor::MonitorLayout,
 };
-use std::fs;
+use std::{fs, process::Command};
 
-pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
+pub fn extract_and_modify_theme(
+    monitor_layout: &MonitorLayout,
+) -> Result<(), ThemeError> {
     let workdir =
         theme_workdir().map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
@@ -23,9 +27,21 @@ pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
     fs::copy(&theme_image_path, &dest_image_path)
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
-    css::update_theme_css(&workdir)?;
+    css::update_theme_css(&workdir, monitor_layout)?;
 
-    xml::generate_gresource_xml(&workdir)?;
+    let xml_path = xml::generate_gresource_xml(&workdir)?;
+
+    let compiled_resource = compile::compile_theme(&xml_path)?;
+
+    Command::new("sudo")
+        .arg(
+            std::env::current_exe()
+                .map_err(|_| ThemeError::ThemeInstallationFailed)?,
+        )
+        .arg("install")
+        .arg(compiled_resource)
+        .status()
+        .map_err(|_| ThemeError::ThemeInstallationFailed)?;
 
     Ok(())
 }

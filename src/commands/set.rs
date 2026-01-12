@@ -35,7 +35,7 @@ pub fn run(args: SetArgs) -> Result<()> {
     compose_and_save_wallpaper(&args.image, &monitor_layout, args.blur as f32)
         .map_err(SetError::from)?;
 
-    extract_and_modify_theme().map_err(SetError::from)?;
+    extract_and_modify_theme(&monitor_layout).map_err(SetError::from)?;
 
     Ok(())
 }

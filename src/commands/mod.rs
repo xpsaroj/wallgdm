@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use crate::error::Result;
 use clap::{Parser, Subcommand};
 
+pub mod install;
 pub mod list;
 pub mod revert;
 pub mod set;
@@ -24,6 +27,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     Set(set::SetArgs),
+    Install { gresource: PathBuf },
     Revert,
     Status,
     List,
@@ -34,6 +38,7 @@ impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
             Commands::Set(args) => set::run(args),
+            Commands::Install { gresource } => install::run(&gresource),
             Commands::Revert => revert::run(),
             Commands::Status => status::run(),
             Commands::List => list::run(),
