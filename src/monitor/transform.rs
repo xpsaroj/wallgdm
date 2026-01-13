@@ -176,4 +176,38 @@ mod tests {
 
         assert!(apply_scale(&layout, 1.25).is_err());
     }
+
+    #[test]
+    fn no_primary_does_not_duplicate_monitors() {
+        let layout = MonitorLayout {
+            monitors: vec![
+                Monitor {
+                    name: "eDP-1".into(),
+                    width: 1920,
+                    height: 1080,
+                    x: 0,
+                    y: 0,
+                    is_primary: false,
+                },
+                Monitor {
+                    name: "HDMI-A-1".into(),
+                    width: 1920,
+                    height: 1080,
+                    x: 1920,
+                    y: 0,
+                    is_primary: false,
+                },
+            ],
+            total_width: 3840,
+            total_height: 1080,
+        };
+
+        let scaled = apply_scale(&layout, 1.25).expect("scale failed");
+
+        assert_eq!(scaled.monitors.len(), 2);
+
+        let primary_count =
+            scaled.monitors.iter().filter(|m| m.is_primary).count();
+        assert_eq!(primary_count, 1);
+    }
 }
