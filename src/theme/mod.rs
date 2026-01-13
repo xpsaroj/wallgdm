@@ -6,7 +6,6 @@ mod xml;
 use crate::{
     config::{theme_workdir, wallpaper_file_path},
     error::ThemeError,
-    monitor::MonitorLayout,
 };
 use std::{fs, process::Command};
 

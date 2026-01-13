@@ -65,14 +65,11 @@ pub fn run(args: SetArgs) -> error::Result<()> {
         args.image, args.blur
     );
 
-    let monitor_layout = get_monitor_layout(args.scale.as_f32() ).map_err(SetError::from)?;
+    let monitor_layout =
+        get_monitor_layout(args.scale.as_f32()).map_err(SetError::from)?;
 
-    compose_and_save_wallpaper(
-        &args.image,
-        &monitor_layout,
-        args.blur as f32,
-    )
-    .map_err(SetError::from)?;
+    compose_and_save_wallpaper(&args.image, &monitor_layout, args.blur as f32)
+        .map_err(SetError::from)?;
 
     extract_and_modify_theme().map_err(SetError::from)?;
 

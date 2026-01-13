@@ -3,7 +3,7 @@ mod transform;
 
 use crate::error::MonitorError;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Monitor {
     pub name: String,
     pub width: u32,
