@@ -56,6 +56,10 @@ pub enum SetError {
     /// Theme extraction or modification failed.
     #[error("theme error")]
     Theme(#[from] ThemeError),
+
+    /// Configuration or directory operation failed.
+    #[error("config error")]
+    Config(#[from] ConfigError),
 }
 
 /// Errors that can occur while reverting to the previous GDM wallpaper.

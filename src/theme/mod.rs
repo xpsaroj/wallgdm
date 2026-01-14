@@ -3,30 +3,24 @@ mod css;
 mod extract;
 mod xml;
 
-use crate::{
-    config::{theme_workdir, wallpaper_file_path},
-    error::ThemeError,
-};
-use std::{fs, process::Command};
+use crate::{config::SetDirs, error::ThemeError};
+use std::{fs, path::Path, process::Command};
 
-pub fn extract_and_modify_theme() -> Result<(), ThemeError> {
-    let workdir =
-        theme_workdir().map_err(|_| ThemeError::ThemeExtractionFailed)?;
+pub fn extract_and_modify_theme(
+    working_dirs: &SetDirs,
+    theme_image_path: &Path,
+) -> Result<(), ThemeError> {
+    extract::extract_gnome_shell_theme(&working_dirs.theme_workdir)?;
 
-    extract::extract_gnome_shell_theme(&workdir)?;
-
-    // copy image to the theme directory
-    let theme_image_path =
-        wallpaper_file_path().map_err(|_| ThemeError::ThemeExtractionFailed)?;
-    let theme_dir = workdir.join("theme");
+    let theme_dir = working_dirs.theme_workdir.join("theme");
     let dest_image_path = theme_dir.join("background.png");
 
     fs::copy(&theme_image_path, &dest_image_path)
         .map_err(|_| ThemeError::ThemeExtractionFailed)?;
 
-    css::update_theme_css(&workdir)?;
+    css::update_theme_css(&working_dirs.theme_workdir)?;
 
-    let xml_path = xml::generate_gresource_xml(&workdir)?;
+    let xml_path = xml::generate_gresource_xml(&working_dirs.theme_workdir)?;
 
     let compiled_resource = compile::compile_theme(&xml_path)?;
 

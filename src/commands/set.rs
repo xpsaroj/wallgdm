@@ -1,5 +1,6 @@
 use clap::{Args, ValueEnum};
 
+use crate::config::SetDirs;
 use crate::error::{self, SetError};
 use crate::image::compose_and_save_wallpaper;
 use crate::monitor::get_monitor_layout;
@@ -65,13 +66,21 @@ pub fn run(args: SetArgs) -> error::Result<()> {
         args.image, args.blur
     );
 
+    let working_dirs = SetDirs::new().map_err(SetError::from)?;
+
     let monitor_layout =
         get_monitor_layout(args.scale.as_f32()).map_err(SetError::from)?;
 
-    compose_and_save_wallpaper(&args.image, &monitor_layout, args.blur as f32)
-        .map_err(SetError::from)?;
+    let wallpaper_image_path = compose_and_save_wallpaper(
+        &working_dirs,
+        &args.image,
+        &monitor_layout,
+        args.blur as f32,
+    )
+    .map_err(SetError::from)?;
 
-    extract_and_modify_theme().map_err(SetError::from)?;
+    extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
+        .map_err(SetError::from)?;
 
     Ok(())
 }

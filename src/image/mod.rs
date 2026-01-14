@@ -2,22 +2,28 @@ mod blur;
 mod compose;
 mod resize;
 
+use crate::config::SetDirs;
 use crate::{
-    config::wallpaper_file_path, error::ImageError,
-    image::compose::compose_wallpaper, monitor::MonitorLayout,
+    error::ImageError, image::compose::compose_wallpaper,
+    monitor::MonitorLayout,
 };
+use std::path::PathBuf;
 
 pub fn compose_and_save_wallpaper(
+    working_dirs: &SetDirs,
     img_path: &str,
     layout: &MonitorLayout,
     blur_amount: f32,
-) -> Result<(), ImageError> {
+) -> Result<PathBuf, ImageError> {
     let wallpaper = compose_wallpaper(img_path, &layout, blur_amount)?;
 
-    let image_file_path =
-        wallpaper_file_path().map_err(|_| ImageError::ImageSaveFailed)?;
+    let image_file_path = &working_dirs
+        .wallpaper_output_dir
+        .join("composed_wallpaper.png");
 
     wallpaper
         .save(image_file_path)
-        .map_err(|_| ImageError::ImageSaveFailed)
+        .map_err(|_| ImageError::ImageSaveFailed)?;
+
+    Ok(image_file_path.to_path_buf())
 }

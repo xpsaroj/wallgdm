@@ -1,3 +1,6 @@
+//! Provides directory management for wallgdm.
+//! Includes low-level helpers and per-command working directories structs.
+
 use std::{
     fs,
     io::ErrorKind,
@@ -6,6 +9,34 @@ use std::{
 
 use crate::error::ConfigError;
 use dirs::data_dir;
+
+#[derive(Debug)]
+pub struct SetDirs {
+    pub theme_workdir: PathBuf,
+    pub wallpaper_output_dir: PathBuf,
+}
+
+impl SetDirs {
+    pub fn new() -> Result<Self, ConfigError> {
+        Ok(Self {
+            theme_workdir: theme_workdir()?,
+            wallpaper_output_dir: wallpaper_output_dir()?,
+        })
+    }
+}
+
+#[derive(Debug)]
+pub struct ListDirs {
+    pub data_dir: PathBuf,
+}
+
+impl ListDirs {
+    pub fn new() -> Result<Self, ConfigError> {
+        Ok(Self {
+            data_dir: wallgdm_data_dir()?,
+        })
+    }
+}
 
 /// Directory where temporary theme extraction / modification happens
 pub fn theme_workdir() -> Result<PathBuf, ConfigError> {
@@ -26,15 +57,6 @@ pub fn wallpaper_output_dir() -> Result<PathBuf, ConfigError> {
     ensure_exists(&path)?;
     Ok(path)
 }
-
-/// Full path for the composed wallpaper image file
-pub fn wallpaper_file_path() -> Result<PathBuf, ConfigError> {
-    Ok(wallpaper_output_dir()?.join("composed_wallpaper.png"))
-}
-
-/// Gnome shell theme gresource location
-pub const GNOME_SHELL_THEME_RESOURCE: &str =
-    "/usr/share/gnome-shell/gnome-shell-theme.gresource";
 
 /// Base data directory for wallgdm
 fn wallgdm_data_dir() -> Result<PathBuf, ConfigError> {
