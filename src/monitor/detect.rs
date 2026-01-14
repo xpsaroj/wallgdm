@@ -7,10 +7,10 @@ pub fn detect_monitors() -> Result<MonitorLayout, MonitorError> {
     let output = Command::new("xrandr")
         .arg("--query")
         .output()
-        .map_err(|_| MonitorError::DetectionFailed)?;
+        .map_err(|e| MonitorError::XrandrUnavailable(e))?;
 
     if !output.status.success() {
-        return Err(MonitorError::DetectionFailed);
+        return Err(MonitorError::XrandrFailed);
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -48,20 +48,20 @@ fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
     }
 
     if monitors.is_empty() {
-        return Err(MonitorError::DetectionFailed);
+        return Err(MonitorError::NoMonitorsFound);
     }
 
     let total_width = monitors
         .iter()
         .map(|m| m.x as u32 + m.width)
         .max()
-        .ok_or(MonitorError::DetectionFailed)?;
+        .ok_or(MonitorError::ParseFailed)?;
 
     let total_height = monitors
         .iter()
         .map(|m| m.y as u32 + m.height)
         .max()
-        .ok_or(MonitorError::DetectionFailed)?;
+        .ok_or(MonitorError::ParseFailed)?;
 
     Ok(MonitorLayout {
         monitors,
@@ -71,15 +71,15 @@ fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
 }
 
 fn parse_geometry(g: &str) -> Result<(u32, u32, i32, i32), MonitorError> {
-    let (res, pos) = g.split_once('+').ok_or(MonitorError::DetectionFailed)?;
-    let (w, h) = res.split_once('x').ok_or(MonitorError::DetectionFailed)?;
-    let (x, y) = pos.split_once('+').ok_or(MonitorError::DetectionFailed)?;
+    let (res, pos) = g.split_once('+').ok_or(MonitorError::ParseFailed)?;
+    let (w, h) = res.split_once('x').ok_or(MonitorError::ParseFailed)?;
+    let (x, y) = pos.split_once('+').ok_or(MonitorError::ParseFailed)?;
 
     Ok((
-        w.parse().map_err(|_| MonitorError::DetectionFailed)?,
-        h.parse().map_err(|_| MonitorError::DetectionFailed)?,
-        x.parse().map_err(|_| MonitorError::DetectionFailed)?,
-        y.parse().map_err(|_| MonitorError::DetectionFailed)?,
+        w.parse().map_err(|_| MonitorError::ParseFailed)?,
+        h.parse().map_err(|_| MonitorError::ParseFailed)?,
+        x.parse().map_err(|_| MonitorError::ParseFailed)?,
+        y.parse().map_err(|_| MonitorError::ParseFailed)?,
     ))
 }
 

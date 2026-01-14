@@ -21,9 +21,12 @@ pub fn compose_and_save_wallpaper(
         .wallpaper_output_dir
         .join("composed_wallpaper.png");
 
-    wallpaper
-        .save(image_file_path)
-        .map_err(|_| ImageError::ImageSaveFailed)?;
+    wallpaper.save(image_file_path).map_err(|e| {
+        ImageError::ImageSaveFailed {
+            path: image_file_path.into(),
+            source: e,
+        }
+    })?;
 
     Ok(image_file_path.to_path_buf())
 }

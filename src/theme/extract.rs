@@ -41,8 +41,7 @@ fn extract_single_resource(
     let final_output_path = output_path.join(relative_path);
 
     if let Some(parent) = final_output_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+        fs::create_dir_all(parent).map_err(|_| ThemeError::Filesystem)?;
     }
 
     let output = Command::new("gresource")
@@ -50,14 +49,14 @@ fn extract_single_resource(
         .arg(GNOME_SHELL_THEME_RESOURCE)
         .arg(resource)
         .output()
-        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+        .map_err(|_| ThemeError::CommandFailed("gresource"))?;
 
     if !output.status.success() {
-        return Err(ThemeError::ThemeExtractionFailed);
+        return Err(ThemeError::CommandFailed("gresource"));
     }
 
     fs::write(&final_output_path, &output.stdout)
-        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+        .map_err(|_| ThemeError::Filesystem)?;
 
     Ok(())
 }

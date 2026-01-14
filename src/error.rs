@@ -18,7 +18,7 @@ pub type Result<T> = std::result::Result<T, WallGdmError>;
 #[derive(Error, Debug)]
 pub enum WallGdmError {
     /// Setting the wallpaper failed.
-    #[error("set command failed")]
+    #[error("set command failed: {0}")]
     Set(#[from] SetError),
 
     /// Reverting to the previous wallpaper failed.
@@ -42,23 +42,19 @@ pub enum WallGdmError {
 #[derive(Error, Debug)]
 pub enum SetError {
     /// The provided image path could not be processed.
-    #[error("image processing error")]
+    #[error("image processing error:\n {0}")]
     Image(#[from] ImageError),
 
     /// Failed to detect the system monitor layout.
-    #[error("monitor error")]
+    #[error("monitor detection error:\n {0}")]
     Monitor(#[from] MonitorError),
 
-    /// A system-level operation failed (permissions, commands, etc.).
-    #[error("system error")]
-    System(#[from] SystemError),
-
     /// Theme extraction or modification failed.
-    #[error("theme error")]
+    #[error("theme extraction/modification error:\n {0}")]
     Theme(#[from] ThemeError),
 
     /// Configuration or directory operation failed.
-    #[error("config error")]
+    #[error("configuration error:\n {0}")]
     Config(#[from] ConfigError),
 }
 
@@ -106,16 +102,27 @@ pub enum ListError {
     ReadError(String),
 }
 
-/// Errors related to monitor detection.
 #[derive(Error, Debug)]
 pub enum MonitorError {
-    /// The system monitor layout could not be detected.
-    #[error("failed to detect monitors")]
-    DetectionFailed,
+    /// Failed to execute `xrandr` (not found or not executable)
+    #[error("failed to execute xrandr")]
+    XrandrUnavailable(#[source] std::io::Error),
 
-    /// The monitor data parsed was invalid or inconsistent.
-    #[error("invalid monitor data")]
-    InvalidData,
+    /// `xrandr` ran but returned a non-zero exit status
+    #[error("xrandr command failed")]
+    XrandrFailed,
+
+    /// Output from xrandr could not be parsed
+    #[error("failed to parse monitor layout")]
+    ParseFailed,
+
+    /// No connected monitors were detected
+    #[error("no connected monitors detected")]
+    NoMonitorsFound,
+
+    /// Monitor layout is internally inconsistent
+    #[error("invalid monitor layout")]
+    InvalidLayout,
 }
 
 /// Errors related to system-level operations.
@@ -134,42 +141,58 @@ pub enum SystemError {
 #[derive(Error, Debug)]
 pub enum ImageError {
     /// The provided image path is invalid or unreadable.
-    #[error("invalid image path")]
-    InvalidImagePath,
+    #[error("image path does not exist or is unreadable: {path}")]
+    InvalidImagePath { path: PathBuf },
 
     /// The image format is not supported.
     #[error("unsupported image format")]
     UnsupportedImageFormat,
 
     /// Failed to load the image from the specified path.
-    #[error("failed to load image")]
-    ImageLoadFailed,
+    #[error("failed to load image '{path}': {source}")]
+    ImageLoadFailed {
+        path: PathBuf,
+        #[source]
+        source: image::ImageError,
+    },
 
     /// Failed to save the processed image.
-    #[error("failed to save image")]
-    ImageSaveFailed,
+    #[error("failed to save image to '{path}': {source}")]
+    ImageSaveFailed {
+        path: PathBuf,
+        #[source]
+        source: image::ImageError,
+    },
 }
 
 /// Errors related to theme extraction and modification.
 #[derive(Error, Debug)]
 pub enum ThemeError {
-    /// Failed to generate gresource XML.
-    #[error("failed to generate gresource XML")]
-    GresourceXmlGenerationFailed,
+    /// Required external command failed or is unavailable
+    #[error("required command failed: {0}")]
+    CommandFailed(&'static str),
 
-    /// Failed to extract the Gnome shell theme.
+    /// File system operation failed
+    #[error("file system operation failed")]
+    Filesystem,
+
+    /// Failed to extract the GNOME Shell theme resources
     #[error("failed to extract gnome shell theme")]
     ThemeExtractionFailed,
 
-    /// Failed to modify the theme CSS.
+    /// Failed to modify theme CSS
     #[error("failed to modify theme CSS")]
     CssModificationFailed,
 
-    /// Failed to compile the theme resources.
+    /// Failed to generate gresource XML
+    #[error("failed to generate gresource XML")]
+    GresourceXmlGenerationFailed,
+
+    /// Failed to compile theme resources
     #[error("failed to compile theme resources")]
     ThemeCompilationFailed,
 
-    /// Theme installation failed.
+    /// Failed to install theme
     #[error("theme installation failed")]
     ThemeInstallationFailed,
 }
@@ -177,7 +200,7 @@ pub enum ThemeError {
 /// Error type for config / directory operations
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error("failed to create directory {0}")]
+    #[error("failed to create directory: {0}")]
     CreateDirFailed(PathBuf),
 }
 

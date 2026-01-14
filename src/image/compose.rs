@@ -6,13 +6,25 @@ use crate::{
 use image::{
     imageops, {DynamicImage, RgbaImage},
 };
+use std::path::Path;
 
 pub fn compose_wallpaper(
     img_path: &str,
     layout: &MonitorLayout,
     blur_amount: f32,
 ) -> Result<DynamicImage, ImageError> {
-    let img = image::open(img_path).map_err(|_| ImageError::ImageLoadFailed)?;
+    let path = Path::new(img_path);
+    if !path.exists() {
+        return Err(ImageError::InvalidImagePath {
+            path: path.to_path_buf(),
+        });
+    }
+
+    let img =
+        image::open(img_path).map_err(|e| ImageError::ImageLoadFailed {
+            path: img_path.into(),
+            source: e,
+        })?;
 
     let mut canvas = RgbaImage::from_pixel(
         layout.total_width,

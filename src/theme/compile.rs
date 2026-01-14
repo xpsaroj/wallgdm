@@ -13,7 +13,7 @@ pub fn compile_theme(gresource_xml: &Path) -> Result<PathBuf, ThemeError> {
         .current_dir(parent_dir)
         .arg(gresource_xml)
         .status()
-        .map_err(|_| ThemeError::ThemeCompilationFailed)?;
+        .map_err(|_| ThemeError::CommandFailed("glib-compile-resources"))?;
 
     if !status.success() {
         return Err(ThemeError::ThemeCompilationFailed);

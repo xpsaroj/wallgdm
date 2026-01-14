@@ -1,9 +1,11 @@
 use clap::Parser;
-use wallgdm::{commands::Cli, error::Result};
+use wallgdm::commands::Cli;
 
-fn main() -> Result<()> {
+fn main() {
     let cli = Cli::parse();
-    cli.run()?;
 
-    Ok(())
+    if let Err(err) = cli.run() {
+        eprintln!("error: {}", err);
+        std::process::exit(1);
+    }
 }

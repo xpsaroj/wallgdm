@@ -16,7 +16,7 @@ pub fn extract_and_modify_theme(
     let dest_image_path = theme_dir.join("background.png");
 
     fs::copy(&theme_image_path, &dest_image_path)
-        .map_err(|_| ThemeError::ThemeExtractionFailed)?;
+        .map_err(|_| ThemeError::Filesystem)?;
 
     css::update_theme_css(&working_dirs.theme_workdir)?;
 

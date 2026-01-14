@@ -44,7 +44,7 @@ pub fn theme_workdir() -> Result<PathBuf, ConfigError> {
     match fs::remove_dir_all("/tmp/wallgdm_theme_workdir") {
         Ok(_) => {}
         Err(e) if e.kind() == ErrorKind::NotFound => {}
-        Err(_) => return Err(ConfigError::CreateDirFailed(path.to_path_buf())),
+        Err(_) => return Err(ConfigError::CreateDirFailed(path.into())),
     }
     let path = std::env::temp_dir().join("wallgdm_theme_workdir");
     ensure_exists(&path)?;
@@ -74,5 +74,5 @@ fn wallgdm_data_dir() -> Result<PathBuf, ConfigError> {
 /// Ensures a directory exists, creating it if necessary
 fn ensure_exists(path: &Path) -> Result<(), ConfigError> {
     fs::create_dir_all(path)
-        .map_err(|_| ConfigError::CreateDirFailed(path.to_path_buf()))
+        .map_err(|_| ConfigError::CreateDirFailed(path.into()))
 }

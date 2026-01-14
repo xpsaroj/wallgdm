@@ -6,7 +6,7 @@ pub fn apply_scale(
     scale: f32,
 ) -> Result<MonitorLayout, MonitorError> {
     if layout.monitors.is_empty() {
-        return Err(MonitorError::InvalidData);
+        return Err(MonitorError::NoMonitorsFound);
     }
 
     // Normalize primary monitor
@@ -34,7 +34,7 @@ pub fn apply_scale(
 
     // Adjust remaining monitors horizontally
     for m in normalized.iter().filter(|m| !m.is_primary) {
-        let prev = monitors.last().ok_or(MonitorError::InvalidData)?;
+        let prev = monitors.last().ok_or(MonitorError::InvalidLayout)?;
 
         monitors.push(Monitor {
             name: m.name.clone(),
@@ -50,13 +50,13 @@ pub fn apply_scale(
         .iter()
         .map(|m| m.x as u32 + m.width)
         .max()
-        .ok_or(MonitorError::InvalidData)?;
+        .ok_or(MonitorError::InvalidLayout)?;
 
     let total_height = monitors
         .iter()
         .map(|m| m.y as u32 + m.height)
         .max()
-        .ok_or(MonitorError::InvalidData)?;
+        .ok_or(MonitorError::InvalidLayout)?;
 
     Ok(MonitorLayout {
         monitors,
