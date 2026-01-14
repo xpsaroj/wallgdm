@@ -1,5 +1,7 @@
-//! Provides directory management for wallgdm.
-//! Includes low-level helpers and per-command working directories structs.
+//! Directory management for WallGDM.
+//!
+//! Provides helpers for creating and managing working directories used by commands
+//! such as `set` and `list`.
 
 use std::{
     fs,
@@ -10,13 +12,18 @@ use std::{
 use crate::error::ConfigError;
 use dirs::data_dir;
 
+/// Working directories used by the `set` command.
 #[derive(Debug)]
 pub struct SetDirs {
+    /// Temporary directory for theme extraction/modification
     pub theme_workdir: PathBuf,
+
+    /// Directory where composed wallpaper images are saved
     pub wallpaper_output_dir: PathBuf,
 }
 
 impl SetDirs {
+    /// Create and return a new `SetDirs` struct, ensuring directories exist.
     pub fn new() -> Result<Self, ConfigError> {
         Ok(Self {
             theme_workdir: theme_workdir()?,
@@ -25,12 +32,15 @@ impl SetDirs {
     }
 }
 
+/// Directories used by the `list` command.
 #[derive(Debug)]
 pub struct ListDirs {
+    /// Base data directory for wallgdm
     pub data_dir: PathBuf,
 }
 
 impl ListDirs {
+    /// Create and return a new `ListDirs` struct.
     pub fn new() -> Result<Self, ConfigError> {
         Ok(Self {
             data_dir: wallgdm_data_dir()?,
@@ -38,20 +48,22 @@ impl ListDirs {
     }
 }
 
-/// Directory where temporary theme extraction / modification happens
+/// Temporary working directory for theme extraction/modification
 pub fn theme_workdir() -> Result<PathBuf, ConfigError> {
     let path = std::env::temp_dir().join("wallgdm_theme_workdir");
+
+    // Clean up old directory if it exists
     match fs::remove_dir_all("/tmp/wallgdm_theme_workdir") {
         Ok(_) => {}
         Err(e) if e.kind() == ErrorKind::NotFound => {}
         Err(_) => return Err(ConfigError::CreateDirFailed(path.into())),
     }
-    let path = std::env::temp_dir().join("wallgdm_theme_workdir");
+
     ensure_exists(&path)?;
     Ok(path)
 }
 
-/// Directory where composed wallpaper images are saved
+/// Directory to save composed wallpaper images
 pub fn wallpaper_output_dir() -> Result<PathBuf, ConfigError> {
     let path = wallgdm_data_dir()?.join("images");
     ensure_exists(&path)?;
@@ -60,12 +72,9 @@ pub fn wallpaper_output_dir() -> Result<PathBuf, ConfigError> {
 
 /// Base data directory for wallgdm
 fn wallgdm_data_dir() -> Result<PathBuf, ConfigError> {
-    let path = if let Some(dir) = data_dir() {
-        dir.join("wallgdm")
-    } else {
-        // fallback if XDG_DATA_HOME / home dir is unavailable
-        PathBuf::from("/usr/local/share/wallgdm")
-    };
+    let path = data_dir()
+        .map(|dir| dir.join("wallgdm"))
+        .unwrap_or_else(|| PathBuf::from("/usr/local/share/wallgdm"));
 
     ensure_exists(&path)?;
     Ok(path)

@@ -1,6 +1,21 @@
+//! Monitor layout transformation.
+//!
+//! This module adjusts monitor coordinates and resolutions based on a given scale factor.
+//! The primary monitor is normalized and scaled, while secondary monitors are repositioned
+//! relative to the primary monitor.  
+
 use crate::error::MonitorError;
 use crate::monitor::{Monitor, MonitorLayout};
 
+/// Apply a scaling factor to the monitor layout.
+///
+/// The primary monitor is scaled according to `scale`, and all other monitors are
+/// repositioned horizontally relative to the primary.  
+/// Returns a new `MonitorLayout` with adjusted coordinates and dimensions.
+///
+/// # Errors
+/// Returns `MonitorError::NoMonitorsFound` if the input layout has no monitors,
+/// or `MonitorError::InvalidLayout` if the layout cannot be normalized.
 pub fn apply_scale(
     layout: &MonitorLayout,
     scale: f32,
@@ -8,6 +23,8 @@ pub fn apply_scale(
     if layout.monitors.is_empty() {
         return Err(MonitorError::NoMonitorsFound);
     }
+
+    log::debug!("Applying scale factor {} to the layout", scale);
 
     // Normalize primary monitor
     let mut normalized = layout.monitors.clone();
@@ -57,6 +74,13 @@ pub fn apply_scale(
         .map(|m| m.y as u32 + m.height)
         .max()
         .ok_or(MonitorError::InvalidLayout)?;
+
+    log::debug!(
+        "Scaled monitor layout: {:?}, total size: {}x{}",
+        monitors,
+        total_width,
+        total_height
+    );
 
     Ok(MonitorLayout {
         monitors,

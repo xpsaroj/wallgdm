@@ -1,8 +1,24 @@
+//! Monitor detection using `xrandr`.
+//!
+//! This module detects connected monitors and their resolutions using the `xrandr` command-line tool.
+//!
+//! **Note:** `xrandr` must be installed and accessible in the system PATH. On systems without
+//! `xrandr` (or if it’s not executable), detection will fail with `MonitorError::XrandrUnavailable`.
+//!
+//! The module parses `xrandr --query` output to build a `MonitorLayout` struct.
+
 use std::process::Command;
 
 use crate::error::MonitorError;
 use crate::monitor::{Monitor, MonitorLayout};
 
+/// Detect connected monitors and return their layout.
+///
+/// Uses `xrandr --query` internally. Fails if `xrandr` is not installed,
+/// not executable, or returns an invalid layout.
+///
+/// # Errors
+/// Returns `MonitorError` if `xrandr` is unavailable, fails, or output cannot be parsed.
 pub fn detect_monitors() -> Result<MonitorLayout, MonitorError> {
     let output = Command::new("xrandr")
         .arg("--query")
@@ -17,6 +33,7 @@ pub fn detect_monitors() -> Result<MonitorLayout, MonitorError> {
     parse_xrandr_output(&stdout)
 }
 
+/// Parse the output of `xrandr` into a `MonitorLayout`.
 fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
     let mut monitors = Vec::new();
 
@@ -24,6 +41,7 @@ fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
         if !line.contains(" connected") {
             continue;
         }
+        log::debug!("Parsing xrandr line: {}", line);
 
         let is_primary = line.contains(" primary ");
 
@@ -35,6 +53,15 @@ fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
 
         if let Some(g) = geometry {
             let (width, height, x, y) = parse_geometry(g)?;
+            log::debug!(
+                "Monitor detected: {} ({}x{} at {}, {}){}",
+                name,
+                width,
+                height,
+                x,
+                y,
+                if is_primary { " [primary]" } else { "" }
+            );
 
             monitors.push(Monitor {
                 name,
@@ -70,6 +97,7 @@ fn parse_xrandr_output(output: &str) -> Result<MonitorLayout, MonitorError> {
     })
 }
 
+/// Parse a geometry string like `1920x1080+0+0` into width, height, x, and y.
 fn parse_geometry(g: &str) -> Result<(u32, u32, i32, i32), MonitorError> {
     let (res, pos) = g.split_once('+').ok_or(MonitorError::ParseFailed)?;
     let (w, h) = res.split_once('x').ok_or(MonitorError::ParseFailed)?;

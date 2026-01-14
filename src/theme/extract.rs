@@ -1,9 +1,25 @@
+//! Theme extraction utilities for WallGDM.
+//!
+//! Provides functions to extract GNOME Shell theme resources from the system
+//! gresource. These resources are later modified for wallpaper changes.
+//!
+//! **Note:** Requires `gresource` to be installed on the system; extraction
+//! will fail if it is not available.
+
 use std::{fs, path::Path, process::Command};
 
 use crate::config::GNOME_SHELL_THEME_RESOURCE;
 use crate::error::ThemeError;
 
+/// Extract the GNOME Shell theme resources into a working directory.
+///
+/// # Parameters
+/// - `workdir`: path to the temporary directory where theme resources will be extracted.
+///
+/// # Returns
+/// `Ok(())` if extraction succeeds, otherwise a `ThemeError`.
 pub fn extract_gnome_shell_theme(workdir: &Path) -> Result<(), ThemeError> {
+    log::debug!("Extracting GNOME Shell theme to {:?}", workdir);
     let resource_list = list_resources()?;
 
     for resource in resource_list {
@@ -13,7 +29,10 @@ pub fn extract_gnome_shell_theme(workdir: &Path) -> Result<(), ThemeError> {
     Ok(())
 }
 
+/// List all resources in the GNOME Shell theme gresource.
 fn list_resources() -> Result<Vec<String>, ThemeError> {
+    log::debug!("Listing resources in {:?}", GNOME_SHELL_THEME_RESOURCE);
+
     let output = Command::new("gresource")
         .arg("list")
         .arg(GNOME_SHELL_THEME_RESOURCE)
@@ -25,11 +44,15 @@ fn list_resources() -> Result<Vec<String>, ThemeError> {
     }
 
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let resources = stdout.lines().map(|s| s.to_string()).collect();
+    let resources: Vec<String> =
+        stdout.lines().map(|s| s.to_string()).collect();
+
+    log::debug!("Found {} resources", resources.len());
 
     Ok(resources)
 }
 
+/// Extract a single resource file to the output path.
 fn extract_single_resource(
     resource: &str,
     output_path: &Path,
@@ -43,6 +66,8 @@ fn extract_single_resource(
     if let Some(parent) = final_output_path.parent() {
         fs::create_dir_all(parent).map_err(|_| ThemeError::Filesystem)?;
     }
+
+    log::debug!("Extracting resource {:?} to {:?}", resource, final_output_path);
 
     let output = Command::new("gresource")
         .arg("extract")

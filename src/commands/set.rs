@@ -1,3 +1,8 @@
+//! Implements the `set` command for WallGDM.
+//!
+//! This module provides functionality to set a GDM login screen wallpaper,
+//! including image composition, blur application, DPI scaling, and theme modification.
+
 use clap::{Args, ValueEnum};
 
 use crate::config::SetDirs;
@@ -6,7 +11,9 @@ use crate::image::compose_and_save_wallpaper;
 use crate::monitor::get_monitor_layout;
 use crate::theme::extract_and_modify_theme;
 
-/// Scale factor for high-DPI displays
+/// Scale factor for high-DPI displays.
+///
+/// Used to adjust the wallpaper layout for monitors with different pixel densities.
 #[derive(ValueEnum, Clone, Debug)]
 pub enum ScaleFactor {
     #[clap(name = "1")]
@@ -22,6 +29,7 @@ pub enum ScaleFactor {
 }
 
 impl ScaleFactor {
+    /// Convert the enum variant to its corresponding `f32` value.
     pub fn as_f32(&self) -> f32 {
         match self {
             ScaleFactor::One => 1.0,
@@ -33,18 +41,19 @@ impl ScaleFactor {
     }
 }
 
-/// Arguments for the 'set' command
+/// Arguments for the `set` command.
 #[derive(Args, Debug)]
 pub struct SetArgs {
     /// Image path to use as wallpaper
     #[arg(short, long, help = "Set the wallpaper image path")]
     pub image: String,
 
-    /// Blur amount for the wallpaper (default: 8)
+    /// Blur amount to apply for the wallpaper (default: 8, max: 50)
     #[arg(
         short,
         long,
         default_value_t = 8,
+        value_parser = clap::value_parser!(u32).range(0..=50),
         help = "Set the wallpaper blur amount"
     )]
     pub blur: u32,
@@ -60,17 +69,28 @@ pub struct SetArgs {
     pub scale: ScaleFactor,
 }
 
+/// Execute the `set` command: compose wallpaper, apply blur, and modify the GDM theme.
+///
+/// Returns a `Result` with a top-level [`WallGdmError`] if any step fails.
+///
+/// # Steps
+/// 1. Prepare working directories.
+/// 2. Detect monitor layout (with DPI scaling).
+/// 3. Compose and save the wallpaper image.
+/// 4. Extract and modify the GNOME Shell theme for the login screen.
+///
+/// Errors are propagated and should be handled at the top-level.
 pub fn run(args: SetArgs) -> error::Result<()> {
-    println!(
-        "\nSetting wallpaper to '{}' with blur {}\n",
-        args.image, args.blur
-    );
+    log::info!("Setting gdm login screen wallpaper to '{}' with blur: {} and scale: {:?}", args.image, args.blur, args.scale);
 
+    // Prepare working directories
     let working_dirs = SetDirs::new().map_err(SetError::from)?;
 
+    // Detect monitor layout, considering scale factor
     let monitor_layout =
         get_monitor_layout(args.scale.as_f32()).map_err(SetError::from)?;
 
+    // Compose and save the wallpaper image
     let wallpaper_image_path = compose_and_save_wallpaper(
         &working_dirs,
         &args.image,
@@ -79,6 +99,7 @@ pub fn run(args: SetArgs) -> error::Result<()> {
     )
     .map_err(SetError::from)?;
 
+    // Extract theme and update background
     extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
         .map_err(SetError::from)?;
 
