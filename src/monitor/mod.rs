@@ -7,6 +7,7 @@ mod detect;
 mod transform;
 
 use crate::error::MonitorError;
+pub use detect::detect_monitors;
 
 /// Represents a single monitor's geometry and position.
 #[derive(Debug, Clone)]
@@ -26,7 +27,7 @@ pub struct Monitor {
 }
 
 /// Layout of all connected monitors.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonitorLayout {
     /// List of monitors.
     pub monitors: Vec<Monitor>,

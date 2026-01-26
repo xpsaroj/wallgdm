@@ -24,6 +24,10 @@ pub fn apply_scale(
         return Err(MonitorError::NoMonitorsFound);
     }
 
+    if scale == 1.0 {
+        return Ok(layout.clone());
+    }
+
     log::debug!("Applying scale factor {} to the layout", scale);
 
     // Normalize primary monitor

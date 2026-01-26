@@ -48,6 +48,22 @@ impl ListDirs {
     }
 }
 
+/// Directories used by the `status` command.
+#[derive(Debug)]
+pub struct StatusDirs {
+    /// Base data directory for wallgdm
+    pub data_dir: PathBuf,
+}
+
+impl StatusDirs {
+    /// Create and return a new `StatusDirs` struct.
+    pub fn new() -> Result<Self, ConfigError> {
+        Ok(Self {
+            data_dir: wallgdm_data_dir()?,
+        })
+    }
+}
+
 /// Temporary working directory for theme extraction/modification
 pub fn theme_workdir() -> Result<PathBuf, ConfigError> {
     let path = std::env::temp_dir().join("wallgdm_theme_workdir");

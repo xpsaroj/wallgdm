@@ -84,6 +84,10 @@ pub enum StatusError {
     /// A system-level operation failed.
     #[error("system error")]
     System(#[from] SystemError),
+
+    /// Configuration or directory operation failed.
+    #[error("configuration error:\n {0}")]
+    Config(#[from] ConfigError),
 }
 
 /// Errors that can occur while listing available GDM wallpapers.
