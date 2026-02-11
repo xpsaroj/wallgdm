@@ -210,6 +210,18 @@ pub enum ThemeError {
 pub enum ConfigError {
     #[error("failed to create directory: {0}")]
     CreateDirFailed(PathBuf),
+
+    #[error("failed to serialize configuration")]
+    SerializeFailed,
+
+    #[error("failed to write configuration file: {0}")]
+    WriteFailed(PathBuf),
+
+    #[error("failed to read configuration file: {0}")]
+    ReadFailed(PathBuf),
+
+    #[error("failed to deserialize configuration")]
+    DeserializeFailed,
 }
 
 /// Errors related to theme installation.

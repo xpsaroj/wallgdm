@@ -4,9 +4,8 @@
 //! including image composition, blur application, DPI scaling, and theme modification.
 
 use clap::{Args, ValueEnum};
-use std::process::Command;
 
-use crate::config::SetDirs;
+use crate::config::{AppState, SetDirs};
 use crate::error::{self, SetError};
 use crate::image::compose_and_save_wallpaper;
 use crate::monitor::get_monitor_layout;
@@ -106,13 +105,26 @@ pub fn run(args: SetArgs) -> error::Result<()> {
     .map_err(SetError::from)?;
 
     // Extract theme and update background
-    let compiled_gresource = extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
-        .map_err(SetError::from)?;
+    let compiled_gresource =
+        extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
+            .map_err(SetError::from)?;
 
     // Install the compiled theme resource using sudo
-    let install_result = crate::commands::install::install(&compiled_gresource);
+    crate::commands::install::install(&compiled_gresource)
+        .map_err(SetError::from)?;
 
-    
+    // Save the application state for potential future reverts
+    let app_state = AppState::new(
+        wallpaper_image_path,
+        args.blur,
+        args.scale.as_f32(),
+        monitor_layout,
+    );
+
+    let app_state_file_path = working_dirs.data_dir.join("current_state.json");
+    app_state
+        .save(&app_state_file_path)
+        .map_err(SetError::from)?;
 
     Ok(())
 }

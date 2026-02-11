@@ -6,11 +6,13 @@
 mod detect;
 mod transform;
 
+use serde::{Deserialize, Serialize};
+
 use crate::error::MonitorError;
 pub use detect::detect_monitors;
 
 /// Represents a single monitor's geometry and position.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Monitor {
     /// Monitor name as reported by the system.
     pub name: String,
@@ -27,7 +29,7 @@ pub struct Monitor {
 }
 
 /// Layout of all connected monitors.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonitorLayout {
     /// List of monitors.
     pub monitors: Vec<Monitor>,
