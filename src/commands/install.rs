@@ -9,8 +9,10 @@
 use crate::config::{
     GNOME_BACKUP_THEME_FILE, GNOME_SYSTEM_THEME_DIR, GNOME_SYSTEM_THEME_FILE,
 };
-use crate::error::{Result, WallGdmError};
-use std::{fs, path::Path};
+use crate::error::{
+    self, {ThemeInstallError, WallGdmError},
+};
+use std::{fs, path::Path, process::Command};
 
 /// Install a compiled `.gresource` file as the active GDM theme.
 ///
@@ -24,7 +26,7 @@ use std::{fs, path::Path};
 /// - The process is not running as root
 /// - The provided resource does not exist
 /// - Any filesystem operation fails
-pub fn run(compiled_gresource: &Path) -> Result<()> {
+pub fn run(compiled_gresource: &Path) -> error::Result<()> {
     ensure_root()?;
 
     let system_dir = Path::new(GNOME_SYSTEM_THEME_DIR);
@@ -32,19 +34,19 @@ pub fn run(compiled_gresource: &Path) -> Result<()> {
     let backup_file = system_dir.join(GNOME_BACKUP_THEME_FILE);
 
     if !compiled_gresource.exists() {
-        return Err(WallGdmError::Install);
+        return Err(WallGdmError::Install(ThemeInstallError::InstallationFailed));
     }
 
     // Backup once
     if !backup_file.exists() {
         fs::copy(&system_file, &backup_file)
-            .map_err(|_| WallGdmError::Install)?;
+            .map_err(|_| WallGdmError::Install(ThemeInstallError::InstallationFailed))?;
         log::debug!("Gnome Shell theme backup created at {:?}", backup_file);
     }
 
     // Overwrite system theme
     fs::copy(compiled_gresource, &system_file)
-        .map_err(|_| WallGdmError::Install)?;
+        .map_err(|_| WallGdmError::Install(ThemeInstallError::InstallationFailed))?;
 
     log::info!(
         "Installed GDM theme from {:?} to {:?}",
@@ -55,9 +57,30 @@ pub fn run(compiled_gresource: &Path) -> Result<()> {
     Ok(())
 }
 
-fn ensure_root() -> Result<()> {
+fn ensure_root() -> error::Result<()> {
     if unsafe { libc::geteuid() } != 0 {
-        return Err(WallGdmError::Install);
+        return Err(WallGdmError::Install(ThemeInstallError::InstallationFailed));
     }
+    Ok(())
+}
+
+pub fn install(compiled_gresource: &Path) -> Result<(), ThemeInstallError> {
+    log::info!("Installing compiled theme resource");
+    Command::new("sudo")
+        .arg(
+            std::env::current_exe()
+                .map_err(|_| ThemeInstallError::InstallationFailed)?,
+        )
+        .arg("install")
+        .arg(compiled_gresource)
+        .status()
+        .map_err(|_| ThemeInstallError::InstallationFailed)?;
+
+    log::info!("Theme successfully modified and installed");
+
+    println!(
+        "GDM wallpaper applied successfully.\nPlease restart GDM (log out and log back in) or reboot your system to see the changes."
+    );
+
     Ok(())
 }

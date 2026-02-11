@@ -4,6 +4,7 @@
 //! including image composition, blur application, DPI scaling, and theme modification.
 
 use clap::{Args, ValueEnum};
+use std::process::Command;
 
 use crate::config::SetDirs;
 use crate::error::{self, SetError};
@@ -81,7 +82,12 @@ pub struct SetArgs {
 ///
 /// Errors are propagated and should be handled at the top-level.
 pub fn run(args: SetArgs) -> error::Result<()> {
-    log::info!("Setting gdm login screen wallpaper to '{}' with blur: {} and scale: {:?}", args.image, args.blur, args.scale);
+    log::info!(
+        "Setting gdm login screen wallpaper to '{}' with blur: {} and scale: {:?}",
+        args.image,
+        args.blur,
+        args.scale
+    );
 
     // Prepare working directories
     let working_dirs = SetDirs::new().map_err(SetError::from)?;
@@ -100,8 +106,13 @@ pub fn run(args: SetArgs) -> error::Result<()> {
     .map_err(SetError::from)?;
 
     // Extract theme and update background
-    extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
+    let compiled_gresource = extract_and_modify_theme(&working_dirs, &wallpaper_image_path)
         .map_err(SetError::from)?;
+
+    // Install the compiled theme resource using sudo
+    let install_result = crate::commands::install::install(&compiled_gresource);
+
+    
 
     Ok(())
 }

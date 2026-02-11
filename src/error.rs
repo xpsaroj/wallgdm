@@ -34,8 +34,8 @@ pub enum WallGdmError {
     List(#[from] ListError),
 
     /// Installing a new GDM theme failed.
-    #[error("install command failed")]
-    Install,
+    #[error("install command failed: \n {0}")]
+    Install(#[from] ThemeInstallError),
 }
 
 /// Errors that can occur while setting a new GDM wallpaper.
@@ -56,6 +56,10 @@ pub enum SetError {
     /// Configuration or directory operation failed.
     #[error("configuration error:\n {0}")]
     Config(#[from] ConfigError),
+
+    /// Theme installation failed.
+    #[error("theme installation failed: \n {0}")]
+    Install(#[from] ThemeInstallError),
 }
 
 /// Errors that can occur while reverting to the previous GDM wallpaper.

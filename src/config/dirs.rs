@@ -20,6 +20,9 @@ pub struct SetDirs {
 
     /// Directory where composed wallpaper images are saved
     pub wallpaper_output_dir: PathBuf,
+
+    /// Base data directory for wallgdm
+    pub data_dir: PathBuf,
 }
 
 impl SetDirs {
@@ -28,6 +31,7 @@ impl SetDirs {
         Ok(Self {
             theme_workdir: theme_workdir()?,
             wallpaper_output_dir: wallpaper_output_dir()?,
+            data_dir: wallgdm_data_dir()?,
         })
     }
 }
@@ -87,7 +91,7 @@ pub fn wallpaper_output_dir() -> Result<PathBuf, ConfigError> {
 }
 
 /// Base data directory for wallgdm
-fn wallgdm_data_dir() -> Result<PathBuf, ConfigError> {
+pub fn wallgdm_data_dir() -> Result<PathBuf, ConfigError> {
     let path = data_dir()
         .map(|dir| dir.join("wallgdm"))
         .unwrap_or_else(|| PathBuf::from("/usr/local/share/wallgdm"));

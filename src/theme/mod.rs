@@ -13,7 +13,7 @@ mod extract;
 mod xml;
 
 use crate::{config::SetDirs, error::ThemeError};
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::{Path, PathBuf}, process::Command};
 
 /// Extract the GNOME Shell theme, update it with a new wallpaper, and install it.
 ///
@@ -22,7 +22,7 @@ use std::{fs, path::Path, process::Command};
 /// - `theme_image_path`: path to the wallpaper image to set in the theme.
 ///
 /// # Returns
-/// `Ok(())` if the theme is successfully modified and installed, otherwise a `ThemeError`.
+/// `Ok(PathBuf)` containing the path to the compiled theme resource if the theme is successfully modified, otherwise a `ThemeError`.
 ///
 /// # Note
 /// Installing the theme requires copying files to system directories, which
@@ -32,7 +32,7 @@ use std::{fs, path::Path, process::Command};
 pub fn extract_and_modify_theme(
     working_dirs: &SetDirs,
     theme_image_path: &Path,
-) -> Result<(), ThemeError> {
+) -> Result<PathBuf, ThemeError> {
     log::info!(
         "Extracting and modifying theme with image: {:?}",
         theme_image_path
@@ -64,23 +64,5 @@ pub fn extract_and_modify_theme(
     // Compile the theme resources
     let compiled_resource = compile::compile_theme(&xml_path)?;
 
-    log::info!("Installing compiled theme resource");
-    // Install the compiled theme resource using sudo
-    Command::new("sudo")
-        .arg(
-            std::env::current_exe()
-                .map_err(|_| ThemeError::ThemeInstallationFailed)?,
-        )
-        .arg("install")
-        .arg(compiled_resource)
-        .status()
-        .map_err(|_| ThemeError::ThemeInstallationFailed)?;
-
-    log::info!("Theme successfully modified and installed");
-
-    println!(
-        "GDM wallpaper applied successfully.\nPlease restart GDM (log out and log back in) or reboot your system to see the changes."
-    );
-
-    Ok(())
+    Ok(compiled_resource)
 }
